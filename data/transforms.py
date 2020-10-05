@@ -128,6 +128,8 @@ class RandomResizePad:
     def __init__(self, target_size: int, scale: tuple = (0.1, 2.0), interpolation: str = 'bilinear',
                  fill_color: tuple = (0, 0, 0), repeat=20):
         self.target_size = _size_tuple(target_size)
+        self.target_size_raw = target_size
+        self.box_r = 10
         self.scale = scale
         self.interpolation = interpolation
         self.fill_color = fill_color
@@ -180,7 +182,21 @@ class RandomResizePad:
                 
                 if valid_indices.sum() == 0 and i < self.repeat - 1:
                     continue
-                anno['bbox'] = bbox[valid_indices, :]
+
+                bboxes = bbox[valid_indices, :]
+                box_n, _ = bboxes.shape
+                box_err = False
+                for bbox_idx in range(box_n):
+                    tmp_bbox = bboxes[bbox_idx]
+                    box_y = (tmp_bbox[2] + tmp_bbox[0]) / 2.
+                    box_x = (tmp_bbox[3] + tmp_bbox[1]) / 2.
+                    if box_y < self.box_r or box_y > self.target_size_raw - self.box_r or box_x < self.box_r or box_x > self.target_size_raw - self.box_r:
+                        box_err = True
+
+                if box_err:
+                    continue
+
+                anno['bbox'] = bboxes 
                 anno['cls'] = anno['cls'][valid_indices]
 
             anno['img_scale'] = 1. / img_scale  # back to original
@@ -271,7 +287,7 @@ def transforms_coco_eval(
 
     image_tfl = [
         RandomResizePad(
-            target_size=img_size, interpolation=interpolation, fill_color=fill_color, scale=(1., 5.)),
+            target_size=img_size, interpolation=interpolation, fill_color=fill_color, scale=(1.6, 3.)),
         #ResizePad(
         #    target_size=img_size, interpolation=interpolation, fill_color=fill_color),
         ImageToNumpy(),
@@ -294,10 +310,10 @@ def transforms_coco_train(
     fill_color = resolve_fill_color(fill_color, mean)
 
     image_tfl = [
-        ColorTransform(brightness=(0.5,1.5), contrast=(0.8, 1.2), hue=(-0.07, 0.07)),
+        ColorTransform(brightness=(0.5,1.3), contrast=(0.8, 1.2), hue=(-0.07, 0.07)),
         RandomFlip(horizontal=True, prob=0.5),
         RandomResizePad(
-            target_size=img_size, interpolation=interpolation, fill_color=fill_color, scale=(1., 5.)),
+            target_size=img_size, interpolation=interpolation, fill_color=fill_color, scale=(1.6, 3.)),
         ImageToNumpy(),
     ]
 
