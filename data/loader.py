@@ -48,8 +48,8 @@ class PrefetchLoader:
 
     def __init__(self,
             loader,
-            mean=IMAGENET_DEFAULT_MEAN,
-            std=IMAGENET_DEFAULT_STD):
+            mean=IMAGENET_INCEPTION_MEAN,
+            std=IMAGENET_INCEPTION_STD):
         self.loader = loader
         self.mean = torch.tensor([x * 255 for x in mean]).cuda().view(1, 3, 1, 1)
         self.std = torch.tensor([x * 255 for x in std]).cuda().view(1, 3, 1, 1)
@@ -91,8 +91,8 @@ def create_loader(
         use_prefetcher=True,
         interpolation='bilinear',
         fill_color='mean',
-        mean=IMAGENET_DEFAULT_MEAN,
-        std=IMAGENET_DEFAULT_STD,
+        mean=IMAGENET_INCEPTION_MEAN,
+        std=IMAGENET_INCEPTION_STD,
         num_workers=1,
         distributed=False,
         pin_mem=False,
