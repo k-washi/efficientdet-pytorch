@@ -201,6 +201,7 @@ class RandomResizePad:
 
             
             break
+        
         anno['img_scale'] = 1. / img_scale  # back to original
 
         return new_img, anno
